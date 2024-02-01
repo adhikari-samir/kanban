@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./kanban.css";
 import { FaCaretUp, FaCaretDown } from "react-icons/fa";
-
 import { BiSolidPlusCircle } from "react-icons/bi";
+import Popup from "./Popup";
+import axios from "axios";
 
 const Kanban = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -17,6 +18,25 @@ const Kanban = () => {
 
   const [userEnteredTasks, setUserEnteredTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
+  const [tasksData, setTasksData] = useState([]);
+
+  const baseurl = "http://localhost:8000/api/v1/tasks";
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(baseurl);
+      setTasksData(response.data);
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  console.log(tasksData);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const toggleLorem = (task) => {
     setShowLorem((prevShowLorem) => ({
@@ -30,108 +50,70 @@ const Kanban = () => {
   };
 
   const handle = (tsk) => {
+    setSelectedTask(tsk);
     setSitPopup(true);
   };
 
   const closePopup = () => {
-    setShowPopup(false);
-  };
-
-  const closingPopup = () => {
     setSitPopup(false);
   };
 
-  const handleInputChange = (e) => {
-    setNewTask(e.target.value);
-  };
+  // const closingPopup = () => {
+  //   setSitPopup(false);
+  // };
 
-  const data = [
-    {
-      id: 1,
-      name: "cow",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia",
-      status: "Doing",
-    },
-    {
-      id: 2,
-      name: "gai",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia",
-      status: "Doing",
-    },
-    {
-      id: 3,
-      name: "sameer",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia",
-      status: "Todo",
-    },
-    {
-      id: 4,
-      name: "sandip",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia",
-      status: "Done",
-    },
-    {
-      id: 5,
-      name: "nirgun",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia",
-      status: "Done",
-    },
-  ];
+  // const handleInputChange = (e) => {
+  //   setNewTask(e.target.value);
+  // };
 
   return (
     <>
-      {/* {sitPopup && <TOdo onClose={closingPopup} />} */}
       <div className="heading_txt">
-        <h1 className="ux_txt">UX Kanban Board</h1>
+        <h1 className="ux_txt"> Kanban Board</h1>
         <h5 className="en_txt">
           Entrust User Experience Center of Excellence Task
         </h5>
+        <button onClick={(tsk) => handle(tsk)}> + Add Task </button>
       </div>
       <div className="flexing_data">
         <div className="boxing">
-          <h2>
-            Todo{" "}
-            <i className="icon" onClick={(tsk) => handle(tsk)}>
-              <BiSolidPlusCircle size={21} />
-            </i>
-          </h2>
-
-          <div className="">
-            {userEnteredTasks.map((task, index) => (
-              <div key={index} className="txxt">
-                <div className="reatail_txt">
-                  <p>{task}</p>
-                  <div className="btnn" onClick={() => toggleLorem(task.name)}>
-                    {showLorem[task.name] ? <FaCaretUp /> : <FaCaretDown />}
+          <h2>Todo </h2>
+          <div className="padding_item">
+            {tasksData
+              ?.filter((task) => task.status === "to-do")
+              .map((task) => (
+                <div key={task.id} className="txxt">
+                  <div className="reatail_txt">
+                    <p>{task.title}</p>
+                    <div
+                      className="btnn"
+                      onClick={() => toggleLorem(task.name)}
+                    >
+                      {showLorem[task.name] ? <FaCaretUp /> : <FaCaretDown />}
+                    </div>
                   </div>
+                  {showLorem[task.name] && (
+                    <p>
+                      {task.description}{" "}
+                      <button onClick={() => shift(task)} className="btn">
+                        Edit
+                      </button>
+                    </p>
+                  )}
                 </div>
-                {showLorem[task.name] && (
-                  <p>
-                    {task.description}
-                    <button onClick={() => shift(task)} className="btn">
-                      Edit
-                    </button>
-                  </p>
-                )}
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
         <div className="boxing">
           <h2>Doing</h2>
           <div className="padding_item">
-            {data
-              .filter((task) => task.status === "Doing")
+            {tasksData
+              ?.filter((task) => task.status === "doing")
               .map((task) => (
                 <div key={task.id} className="txxt">
                   <div className="reatail_txt">
-                    <p>{task.name}</p>
+                    <p>{task.title}</p>
                     <div
                       className="btnn"
                       onClick={() => toggleLorem(task.name)}
@@ -155,12 +137,12 @@ const Kanban = () => {
         <div className="boxing">
           <h2>Done</h2>
           <div className="padding_item">
-            {data
-              .filter((task) => task.status === "Done")
+            {tasksData
+              ?.filter((task) => task.status === "done")
               .map((task) => (
                 <div key={task.id} className="txxt">
                   <div className="reatail_txt">
-                    <p>{task.name}</p>
+                    <p>{task.title}</p>
                     <div
                       className="btnn"
                       onClick={() => toggleLorem(task.name)}
@@ -183,7 +165,8 @@ const Kanban = () => {
       </div>
       {/* {showPopup && selectedTask && (
         <Popup task={selectedTask} onClose={closePopup} /> */}
-      )}
+
+      {sitPopup && <Popup onclose={closePopup} />}
     </>
   );
 };
